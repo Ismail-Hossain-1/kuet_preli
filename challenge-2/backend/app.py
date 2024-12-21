@@ -140,6 +140,73 @@ def add_recipe():
         return jsonify({"error": "Failed to add recipe", "details": str(e)}), 500
 
 
+@app.route('/recipes', methods=['GET'])
+def get_recipes():
+    try:
+        # Optional filters from query parameters
+        taste = request.args.get('taste', '')
+        cuisine_type = request.args.get('cuisine_type', '')
+        max_prep_time = request.args.get('max_prep_time', type=int)
+
+        query = "SELECT * FROM recipes WHERE 1=1"
+        params = []
+
+        if taste:
+            query += " AND taste = %s"
+            params.append(taste)
+        if cuisine_type:
+            query += " AND cuisine_type = %s"
+            params.append(cuisine_type)
+        if max_prep_time:
+            query += " AND prep_time <= %s"
+            params.append(max_prep_time)
+
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(query, params)
+        recipes = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify(recipes)
+
+    except Error as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "Failed to retrieve recipes", "details": str(e)}), 500
+    
+    
+@app.route('/recipes/<recipe_id>/ingredients', methods=['POST'])
+def add_ingredient_to_recipe(recipe_id):
+    try:
+        data = request.get_json()
+        ingredient_id = data.get('ingredient_id')
+        quantity_needed = data.get('quantity_needed', 0)
+        unit = data.get('unit', 'grams')
+
+        if not ingredient_id or quantity_needed <= 0:
+            return jsonify({"error": "Ingredient ID and valid quantity are required"}), 400
+
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        query = """
+        INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity_needed, unit)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query, (recipe_id, ingredient_id, quantity_needed, unit))
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({"status": "success", "message": "Ingredient added to recipe successfully"}), 201
+
+    except Error as e:
+        print(f"Error: {e}")
+        return jsonify({"error": "Failed to add ingredient to recipe", "details": str(e)}), 500
+
+
 @app.route('/api/chat', methods=['POST'])
 def ChatController():
     try:
