@@ -1,0 +1,35 @@
+CREATE TABLE ingredients (
+    id VARCHAR(60) PRIMARY KEY,        
+    name VARCHAR(255) NOT NULL,
+    quantity INT DEFAULT 0,            -- Quantity of the ingredient available
+    unit VARCHAR(50)                   -- Unit of measurement (grams, cups, etc.)
+);
+
+CREATE TABLE recipes (
+    id VARCHAR(60) PRIMARY KEY,        
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    instructions TEXT,
+    taste VARCHAR(50),                 -- E.g., 'sweet', 'spicy', 'savory'
+    reviews INT DEFAULT 0,             -- Average review count
+    cuisine_type VARCHAR(50),          -- E.g., 'Italian', 'Indian'
+    prep_time INT,                     -- Preparation time in minutes
+    is_sweet BOOLEAN,                  -- Boolean flag for sweet recipes
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE recipe_ingredients (
+    recipe_id VARCHAR(60),             
+    ingredient_id VARCHAR(60),         
+    quantity_needed INT,
+    unit VARCHAR(50),
+    FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id),
+    PRIMARY KEY (recipe_id, ingredient_id)
+);
+
+CREATE TABLE user_preferences (
+    user_id VARCHAR(60) PRIMARY KEY,  
+    craving_type VARCHAR(255),         -- E.g., 'sweet', 'spicy'
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
